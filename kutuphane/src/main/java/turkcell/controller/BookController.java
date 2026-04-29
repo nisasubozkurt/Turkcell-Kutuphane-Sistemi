@@ -21,4 +21,15 @@ public class BookController {
     public List<Book> getAll() {
         return bookService.getAllBooks();
     }
+
+    // ID ile kitap getirme (Hata yönetimini test etmek için)
+    @GetMapping("/{id}")
+    public Book getById(@PathVariable Long id) {
+        return bookService.getBookById(id);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteBook(@PathVariable Long id) {
+        bookService.deleteBook(id);
+    }
 }
