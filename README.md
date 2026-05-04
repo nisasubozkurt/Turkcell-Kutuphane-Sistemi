@@ -1,11 +1,20 @@
-# 📚 Kütüphane Yönetim Sistemi - Veritabanı Tasarımı
+# 📚 Kütüphane Yönetim Sistemi - Veritabanı Tasarımı & Backend Mimarisi
 
-Bu proje, bir kütüphane sisteminin temel işleyişini modellemek amacıyla PostgreSQL kullanılarak geliştirilmiş bir veritabanı yönetim sistemidir. Proje kapsamında tablo yapıları (DDL), veri manipülasyonları (DML) ve örnek sorgular yer almaktadır.
+Bu proje, bir kütüphane sisteminin temel işleyişini modellemek amacıyla geliştirilmiştir. İlk aşamada PostgreSQL ile veritabanı tasarımı yapılmış, ardından **Spring Boot** kullanılarak **CQRS (Command Query Responsibility Segregation)** mimarisi ile modern bir backend uygulamasına dönüştürülmüştür.
 
 ## 🛠 Kullanılan Teknolojiler
+* **Backend:** Spring Boot 4.0.6, Java 21
 * **Veritabanı:** PostgreSQL
-* **Araçlar:** pgAdmin 4, VS Code
-* **Dil:** SQL (Structured Query Language)
+* **ORM:** Spring Data JPA (Hibernate)
+* **Mimari:** CQRS (Command Query Responsibility Segregation)
+* **Araçlar:** Postman, pgAdmin 4, Docker
+* **Kütüphaneler:** Lombok, Jakarta Validation
+
+## 🏗️ Backend Mimarisi (CQRS)
+Uygulama, veri okuma ve yazma işlemlerini birbirinden ayırarak performans ve bakımı kolay bir yapı sunar:
+* **Commands:** Veri üzerinde değişiklik yapan işlemler (Kitap ekleme, ödünç alma, iade etme).
+* **Queries:** Veri okuma ve listeleme işlemleri (Tüm kayıtları getirme, ID ile sorgulama).
+* **Handlers:** Gelen komut ve sorguları işleyen merkezi iş mantığı katmanı.
 
 ## 📊 Veritabanı Tasarımı (ER Diyagramı)
 
@@ -17,43 +26,45 @@ Veritabanı tasarımı yapılırken ilişkisel model prensiplerine sadık kalın
 
 ---
 
-## 📖 SQL Kavramları Hakkında Bilgi
+## 📡 API Uç Noktaları (Endpoints)
 
-Bu projede kullanılan temel SQL bileşenleri aşağıda açıklanmıştır:
+### Öğrenci İşlemleri
+* `POST /api/students/add` - Yeni öğrenci ekler.
+* `GET /api/students/getall` - Tüm öğrencileri listeler.
+* `GET /api/students/{id}` - ID ile spesifik öğrenci detayını getirir.
 
-### 1. DDL (Data Definition Language - Veri Tanımlama Dili)
-Veritabanının yapısını oluşturmak ve değiştirmek için kullanılır.
-* **CREATE:** Yeni tablolar ve veritabanı oluşturur.
-* **ALTER:** Mevcut tabloların yapısında (kolon ekleme/silme) değişiklik yapar.
+### Kitap İşlemleri
+* `POST /api/books/add` - Envantere yeni kitap ekler.
+* `GET /api/books/getall` - Tüm kitapları listeler.
 
-### 2. DML (Data Manipulation Language - Veri İşleme Dili)
-Tablo içerisindeki veriler üzerinde işlem yapmak için kullanılır.
-* **INSERT:** Tabloya yeni veriler ekler.
-* **UPDATE:** Mevcut verileri günceller.
-* **DELETE:** Verileri siler.
-
-### 3. DQL (Data Query Language - Veri Sorgulama Dili)
-Veritabanından bilgi çekmek ve analiz yapmak için kullanılır.
-* **SELECT:** Verileri listeler.
-* **WHERE:** Belirli kriterlere göre filtreleme yapar.
-* **LIKE / ILIKE:** Metin bazlı arama (maskeleme) yapar.
-* **Aggregate Functions:** `COUNT`, `SUM`, `AVG`, `MIN`, `MAX` gibi fonksiyonlarla hesaplamalar yapar.
+### Ödünç Alma & İade İşlemleri
+* `POST /api/borrowings/add` - Kitabı öğrenciye ödünç verir (Student ve Book ilişkisi kurar).
+* `GET /api/borrowings/getall` - Ödünç alma kayıtlarını ilişkili verilerle (Öğrenci ve Kitap detayları) listeler.
+* `DELETE /api/borrowings/return/{id}` - Kitabı iade eder ve kaydı sonlandırır.
 
 ---
 
-## 🚀 Proje İçeriği
+## 📖 SQL & Veri Yönetimi Hakkında Bilgi
 
-Proje içerisinde aşağıdaki tablolar ve aralarındaki ilişkiler tanımlanmıştır:
-- **ogrenciler**: Üye öğrencilerin kayıtları (Ad, Soyad, Bölüm vb.).
-- **kitaplar**: Kütüphane envanterindeki eserler ve stok durumları.
-- **gorevliler**: İşlemleri yürüten personel bilgileri.
-- **odunc_islemleri**: Hangi öğrencinin hangi kitabı aldığını takip eden merkezi tablo.
-- **cezalar**: Gecikmiş iadeler için uygulanan yaptırımlar.
+Bu projede kullanılan temel SQL ve JPA bileşenleri aşağıda açıklanmıştır:
+
+### 1. DDL (Data Definition Language)
+Hibernate üzerinden otomatik tablo oluşturma (Auto-DDL) ve PostgreSQL üzerinde manuel tablolar.
+* **CREATE:** Yeni tabloların ve `ManyToOne` ilişkilerinin tanımlanması.
+
+### 2. DML (Data Manipulation Language)
+* **INSERT:** Command Handler'lar aracılığıyla veritabanına veri girişi.
+* **DELETE:** `ReturnBookCommandHandler` ile iade edilen kayıtların silinmesi.
+
+### 3. DQL (Data Query Language)
+* **SELECT:** Query Handler'lar üzerinden optimize edilmiş sorgularla verilerin API'ye sunulması.
 
 ---
 
 ## 💻 Kurulum ve Kullanım
 
-1. Bu repoyu bilgisayarınıza indirin.
-2. `kutuphane_sistemi.sql` dosyasını pgAdmin 4 veya tercih ettiğiniz bir SQL editörü ile açın.
-3. Sorguları sırasıyla çalıştırarak tabloları oluşturun ve örnek verileri yükleyin.
+1. Bu repoyu bilgisayarınıza `git clone` ile indirin.
+2. Docker üzerinden PostgreSQL veritabanınızı başlatın.
+3. `src/main/resources/application.yaml` dosyasındaki veritabanı bağlantı bilgilerini düzenleyin.
+4. Terminalde `mvn spring-boot:run` komutunu çalıştırarak uygulamayı başlatın.
+5. API testleri için Postman koleksiyonunu kullanabilirsiniz.
