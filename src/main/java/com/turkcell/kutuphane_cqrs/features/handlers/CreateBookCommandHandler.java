@@ -11,12 +11,18 @@ import org.springframework.stereotype.Service;
 public class CreateBookCommandHandler {
     private final BookRepository bookRepository;
 
-    public void handle(CreateBookCommand command) {
+    public Book handle(CreateBookCommand command) {
+        // Bilerek hata fırlatmak için test koşulu
+        if ("HATA".equalsIgnoreCase(command.getBaslik())) {
+            throw new RuntimeException("Transaction Rollback Testi: Bilerek hata fırlatıldı!");
+        }
+
         Book book = new Book();
         book.setBaslik(command.getBaslik());
         book.setYazar(command.getYazar());
         book.setIsbn(command.getIsbn());
         book.setSayfaSayisi(command.getSayfaSayisi());
-        bookRepository.save(book);
+        
+        return bookRepository.save(book);
     }
 }
